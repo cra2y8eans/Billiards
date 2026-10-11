@@ -10,7 +10,6 @@
 
 
 void servoInit();
-void servoWake();
 void servoUp();
 void servoDown();
 void servoPowerOff();

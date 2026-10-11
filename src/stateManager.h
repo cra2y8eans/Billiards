@@ -11,3 +11,4 @@ extern systemState_e systemState;
 
 void          stateToggle();
 systemState_e getCurrentState();
+void          stateSet(systemState_e newState);

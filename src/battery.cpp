@@ -67,6 +67,7 @@ void batteryCheck(void* pvParameter) {
 void batteryInit() {
   analogReadResolution(12);
   pinMode(batPin, INPUT);
+  batteryReading();
 }
 
 float getBatteryLevel() {

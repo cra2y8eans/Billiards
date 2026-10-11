@@ -57,11 +57,12 @@ void powerOn() {
 void powerTask(void* pvParameters) {
   while (1) {
     if (isPowerBTNLongPressed) {
+      isPowerBTNLongPressed = false; // 清除标志位，避免重复触发
       ESP_LOGI(TAG, "关机中……");
       // 执行关机动作
       buzzerSound(SOUND_SHUTDOWN); // 播放关机提示音
       servoPowerOff();
-      vTaskDelay(pdMS_TO_TICKS(200)); // 等待 1 秒，确保提示音播放完毕
+      vTaskDelay(pdMS_TO_TICKS(1000)); // 等待 1 秒，确保提示音播放完毕
       digitalWrite(MosPin, LOW);
     }
     vTaskDelay(pdMS_TO_TICKS(100));
