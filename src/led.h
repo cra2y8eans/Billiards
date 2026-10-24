@@ -4,8 +4,8 @@
 #include <Arduino.h>
 
 // ===== 常量定义 =====
-#define SHORT_FLASH_DURATION 200
-#define SHORT_FLASH_INTERVAL 200
+#define SHORT_FLASH_DURATION 200 // 短闪烁持续时间
+#define SHORT_FLASH_INTERVAL 200 // 短闪烁间隔
 #define LONG_FLASH_DURATION 500
 #define LONG_FLASH_INTERVAL 500
 

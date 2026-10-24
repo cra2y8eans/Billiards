@@ -3,6 +3,7 @@
 #include "buzzer.h"
 #include "esp_log.h"
 #include "led.h"
+#include "servo.h"
 #include "stateManager.h"
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -36,15 +37,13 @@ static float batteryReading() {
 }
 
 void batteryCheck(void* pvParameter) {
-
   while (1) {
     if (getCurrentState() != SYSTEM_RUNNING) {
-      vTaskDelay(pdMS_TO_TICKS(200)); // 暂停时低频轮询
+      vTaskDelay(pdMS_TO_TICKS(100)); // 暂停时低频轮询
       continue;
     }
 
     float batteryLevel = batteryReading();
-    ledSetMode(LED_ON, getBatteryColor(batPercentage), 0, 0);
     // 低电量报警
     if (batPercentage <= 10.0f) {
       static uint32_t lastAlertTime = 0;

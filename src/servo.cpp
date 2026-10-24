@@ -8,57 +8,82 @@
 #include "stateManager.h"
 #include <ESP32Servo.h>
 #include <freertos/FreeRTOS.h>
-#include <freertos/semphr.h>
 #include <freertos/task.h>
 
-static const char*   TAG                   = "servo"; // 日志标签
-static const uint8_t servoPin              = 1;       // 舵机控制引脚
-static const uint8_t servoUpPin            = 8;       // 舵机向上
-static const uint8_t servoDownPin          = 9;       // 舵机向下
-static const int     ballDistanceThreshold = 600;     // 球距离阈值，单位：毫米
-static const int     homeAngle             = 180;     // 回Home角度
-static const int     readyAngle            = 90;      // 就绪角度
-static const int     spotAngle             = 10;      // 摆球角度
-static Servo         myServo;                         // 创建舵机对象
-static int           currentAngle = homeAngle;        // 记录当前角度
+static const char*   TAG                   = "servo";
+static const uint8_t servoPin              = 1;
+static const uint8_t servoUpPin            = 8;
+static const uint8_t servoDownPin          = 9;
+static const int     ballDistanceThreshold = 900;
 
-static uint16_t angleToMicroseconds(int angle) {
-  // 将角度转换为微秒脉冲宽度
-  angle = constrain(angle, 0, 270);
-  return map(angle, 0, 270, SERVO_PULSE_MIN, SERVO_PULSE_MAX);
+static const int homeAngle  = 190; // 关机收拢
+static const int readyAngle = 120; // 就绪位
+static const int spotAngle  = 30;  // 摆球位
+
+// 每走 1 度等多少 ms（越大越慢）
+#define SERVO_DEGREE_DELAY_MS 15
+
+static Servo  myServo;
+static int    currentAngle = homeAngle;
+volatile bool hasBall      = false;
+
+static void servoMoveTo(int target) {
+  target = constrain(target, 0, 270);
+  if (target == currentAngle) return;
+
+  if (target > currentAngle) {
+    for (int a = currentAngle; a <= target; a++) {
+      myServo.write(a);
+      vTaskDelay(pdMS_TO_TICKS(SERVO_DEGREE_DELAY_MS));
+    }
+  } else {
+    for (int a = currentAngle; a >= target; a--) {
+      myServo.write(a);
+      vTaskDelay(pdMS_TO_TICKS(SERVO_DEGREE_DELAY_MS));
+    }
+  }
+  currentAngle = target;
 }
 
 void servoInit() {
-  ESP32PWM::allocateTimer(1);                                 // 舵机定时器
-  myServo.setPeriodHertz(50);                                 // 设定舵机频率
-  myServo.attach(servoPin, SERVO_PULSE_MIN, SERVO_PULSE_MAX); // 绑定引脚和最大、最小频率
-  myServo.writeMicroseconds(angleToMicroseconds(readyAngle));
+  pinMode(servoUpPin, INPUT_PULLUP);
+  pinMode(servoDownPin, INPUT_PULLUP);
+
+  ESP32PWM::allocateTimer(1);
+  myServo.setPeriodHertz(50);
+  myServo.attach(servoPin, SERVO_PULSE_MIN, SERVO_PULSE_MAX);
+
+  servoMoveTo(readyAngle);
+  currentAngle = readyAngle;
+  stateSet(SYSTEM_PAUSED);
+  vTaskDelay(pdMS_TO_TICKS(1000));
 }
 
 void servoUp() {
   if (digitalRead(servoUpPin) == LOW) {
-    currentAngle += 3; // 每 20ms 走 3°
+    currentAngle += 1;
     if (currentAngle > 270) currentAngle = 270;
-    myServo.writeMicroseconds(angleToMicroseconds(currentAngle));
+    myServo.write(currentAngle);
   }
 }
 
 void servoDown() {
   if (digitalRead(servoDownPin) == LOW) {
-    currentAngle -= 3;
+    currentAngle -= 1;
     if (currentAngle < 0) currentAngle = 0;
-    myServo.writeMicroseconds(angleToMicroseconds(currentAngle));
+    myServo.write(currentAngle);
   }
 }
 
 void servoPowerOff() {
-  myServo.writeMicroseconds(angleToMicroseconds(homeAngle));
+  if (currentAngle == homeAngle) return;
+  servoMoveTo(homeAngle);
+  vTaskDelay(pdMS_TO_TICKS(500));
   myServo.detach();
 }
 
 void servoTask(void* pv) {
   while (1) {
-    // ============ 暂停：手动模式 ============
     if (getCurrentState() != SYSTEM_RUNNING) {
       servoUp();
       servoDown();
@@ -66,34 +91,34 @@ void servoTask(void* pv) {
       continue;
     }
 
-    // ============ 检测 ============
-    int  d       = getLaserDistance();
-    bool hasBall = (d >= 0 && d < ballDistanceThreshold);
-
-    if (hasBall) {
-      vTaskDelay(pdMS_TO_TICKS(50));
+    int d = getLaserDistance();
+    if (d < 0) {
+      vTaskDelay(pdMS_TO_TICKS(500));
       continue;
     }
 
-    // ============ 无球：摆一次 ============
-    myServo.writeMicroseconds(angleToMicroseconds(spotAngle));
-    currentAngle = spotAngle;
-    vTaskDelay(pdMS_TO_TICKS(1500));
+    hasBall = (d < ballDistanceThreshold);
+    if (hasBall) {
+      vTaskDelay(pdMS_TO_TICKS(500));
+      continue;
+    }
 
-    myServo.writeMicroseconds(angleToMicroseconds(homeAngle));
-    currentAngle = homeAngle;
-    vTaskDelay(pdMS_TO_TICKS(1500));
+    ESP_LOGI(TAG, "无球，开始摆球");
+    vTaskDelay(pdMS_TO_TICKS(2000));
+    servoMoveTo(spotAngle);
+    vTaskDelay(pdMS_TO_TICKS(2000));
+    servoMoveTo(readyAngle);
+    vTaskDelay(pdMS_TO_TICKS(2000));
 
-    // ============ 摆完再检测 ============
-    vTaskDelay(pdMS_TO_TICKS(1000)); // 等球稳定
-    d       = getLaserDistance();
-    hasBall = (d >= 0 && d < ballDistanceThreshold);
+    d = getLaserDistance();
+    if (d < 0) continue;
 
+    hasBall = (d < ballDistanceThreshold);
     if (!hasBall) {
+      servoMoveTo(readyAngle);
       buzzerSound(SOUND_ERROR);
       ESP_LOGW(TAG, "料仓空，系统暂停，等待装填");
-      stateSet(SYSTEM_PAUSED);
+      if (getCurrentState() != SYSTEM_PAUSED) stateSet(SYSTEM_EMPTY);
     }
-    // 有球 → 什么都不做，回到循环顶继续检测
   }
 }

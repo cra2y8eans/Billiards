@@ -8,6 +8,7 @@
 #define ANGLE_MIN 0           // 测试下限
 #define ANGLE_MAX 270         // 舵机行程上限  ← 关键
 
+extern volatile bool hasBall;
 
 void servoInit();
 void servoUp();
