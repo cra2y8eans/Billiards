@@ -27,26 +27,35 @@ static volatile bool     buzzerBusy    = false;
 
 static portMUX_TYPE buzzerMux = portMUX_INITIALIZER_UNLOCKED;
 
-// ===================== 预定义提示音 =====================
+// ===================== 预定义提示音（duration 已调长） =====================
+// 成功：C7 → E7 短促上扬（总 460ms）
 static const BuzzerNote SND_OK[] = {
-  { NOTE_C7, 70 }, { NOTE_REST, 30 }, { NOTE_E7, 130 }
+  { NOTE_C7, 150 }, { NOTE_REST, 60 }, { NOTE_E7, 250 }
 };
+
+// 错误：E6 → C6 下降长音（总 1000ms）
 static const BuzzerNote SND_ERROR[] = {
-  { NOTE_E6, 200 }, { NOTE_REST, 60 }, { NOTE_C6, 450 }
+  { NOTE_E6, 300 }, { NOTE_REST, 100 }, { NOTE_C6, 600 }
 };
+
+// 警告：两声相同（总 550ms）
 static const BuzzerNote SND_WARNING[] = {
-  { NOTE_A6, 130 }, { NOTE_REST, 100 }, { NOTE_A6, 130 }
+  { NOTE_A6, 200 }, { NOTE_REST, 150 }, { NOTE_A6, 200 }
 };
+
+// 开机：上行琶音（总 960ms）
 static const BuzzerNote SND_STARTUP[] = {
-  { NOTE_C6, 90 }, { NOTE_E6, 90 }, { NOTE_G6, 90 },
-  { NOTE_C7, 90 }, { NOTE_REST, 40 }, { NOTE_E7, 200 }
+  { NOTE_C6, 150 }, { NOTE_E6, 150 }, { NOTE_G6, 150 },
+  { NOTE_C7, 150 }, { NOTE_REST, 60 }, { NOTE_E7, 300 }
 };
 
+// 关机：下行琶音（总 960ms）
 static const BuzzerNote SND_SHUTDOWN[] = {
-  { NOTE_E7, 90 }, { NOTE_C7, 90 }, { NOTE_G6, 90 },
-  { NOTE_C6, 90 }, { NOTE_REST, 40 }, { NOTE_E6, 200 }
+  { NOTE_E7, 150 }, { NOTE_C7, 150 }, { NOTE_G6, 150 },
+  { NOTE_C6, 150 }, { NOTE_REST, 60 }, { NOTE_E6, 300 }
 };
 
+// 按键：极短"咔"（30ms，保持短）
 static const BuzzerNote SND_KEY[] = {
   { NOTE_G7, 30 }
 };
@@ -134,7 +143,7 @@ void buzzerSound(BuzzerSound sound) {
   case SOUND_STARTUP:
     buzzerPlay(SND_STARTUP, sizeof(SND_STARTUP) / sizeof(BuzzerNote));
     break;
-  case SOUND_SHUTDOWN: 
+  case SOUND_SHUTDOWN:
     buzzerPlay(SND_SHUTDOWN, sizeof(SND_SHUTDOWN) / sizeof(BuzzerNote));
     break;
   case SOUND_KEY:
