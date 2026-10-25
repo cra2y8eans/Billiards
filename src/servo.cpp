@@ -21,25 +21,28 @@ static const int readyAngle = 120; // 就绪位
 static const int spotAngle  = 30;  // 摆球位
 
 // 每走 1 度等多少 ms（越大越慢）
-#define SERVO_DEGREE_DELAY_MS 15
+#define SERVO_SPOT_DELAY_MS 20
+#define SERVO_READY_DELAY_MS 15
+#define SERVO_TUNE_DELAY_MS 20
+#define SERVO_HOMING_DELAY_MS 20
 
 static Servo  myServo;
 static int    currentAngle = homeAngle;
 volatile bool hasBall      = false;
 
-static void servoMoveTo(int target) {
+static void servoMoveTo(int target, int delayMs) {
   target = constrain(target, 0, 270);
   if (target == currentAngle) return;
 
   if (target > currentAngle) {
     for (int a = currentAngle; a <= target; a++) {
       myServo.write(a);
-      vTaskDelay(pdMS_TO_TICKS(SERVO_DEGREE_DELAY_MS));
+      vTaskDelay(pdMS_TO_TICKS(delayMs));
     }
   } else {
     for (int a = currentAngle; a >= target; a--) {
       myServo.write(a);
-      vTaskDelay(pdMS_TO_TICKS(SERVO_DEGREE_DELAY_MS));
+      vTaskDelay(pdMS_TO_TICKS(delayMs));
     }
   }
   currentAngle = target;
@@ -53,7 +56,7 @@ void servoInit() {
   myServo.setPeriodHertz(50);
   myServo.attach(servoPin, SERVO_PULSE_MIN, SERVO_PULSE_MAX);
 
-  servoMoveTo(readyAngle);
+  servoMoveTo(readyAngle, SERVO_HOMING_DELAY_MS);
   currentAngle = readyAngle;
   stateSet(SYSTEM_PAUSED);
   vTaskDelay(pdMS_TO_TICKS(1000));
@@ -77,7 +80,7 @@ void servoDown() {
 
 void servoPowerOff() {
   if (currentAngle == homeAngle) return;
-  servoMoveTo(homeAngle);
+  servoMoveTo(homeAngle, SERVO_HOMING_DELAY_MS);
   vTaskDelay(pdMS_TO_TICKS(500));
   myServo.detach();
 }
@@ -87,7 +90,7 @@ void servoTask(void* pv) {
     if (getCurrentState() != SYSTEM_RUNNING) {
       servoUp();
       servoDown();
-      vTaskDelay(pdMS_TO_TICKS(20));
+      vTaskDelay(pdMS_TO_TICKS(SERVO_TUNE_DELAY_MS));
       continue;
     }
 
@@ -105,9 +108,9 @@ void servoTask(void* pv) {
 
     ESP_LOGI(TAG, "无球，开始摆球");
     vTaskDelay(pdMS_TO_TICKS(2000));
-    servoMoveTo(spotAngle);
+    servoMoveTo(spotAngle, SERVO_SPOT_DELAY_MS);
     vTaskDelay(pdMS_TO_TICKS(2000));
-    servoMoveTo(readyAngle);
+    servoMoveTo(readyAngle, SERVO_READY_DELAY_MS);
     vTaskDelay(pdMS_TO_TICKS(2000));
 
     d = getLaserDistance();
@@ -115,7 +118,7 @@ void servoTask(void* pv) {
 
     hasBall = (d < ballDistanceThreshold);
     if (!hasBall) {
-      servoMoveTo(readyAngle);
+      servoMoveTo(readyAngle, SERVO_READY_DELAY_MS);
       buzzerSound(SOUND_ERROR);
       ESP_LOGW(TAG, "料仓空，系统暂停，等待装填");
       if (getCurrentState() != SYSTEM_PAUSED) stateSet(SYSTEM_EMPTY);
