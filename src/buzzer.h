@@ -6,7 +6,7 @@
 #define BUZZER_MAX_NOTES     16   // 单个旋律最多音符数
 
 // 触发极性：低电平触发模块 → 1；高电平触发模块 → 0
-#define BUZZER_ACTIVE_LOW    1
+#define BUZZER_ACTIVE_LOW    0  // SS8050驱动
 
 // ===================== 常用音名 (Hz) =====================
 #define NOTE_C6   1047
@@ -39,7 +39,7 @@ enum BuzzerSound : uint8_t {
 /** 初始化（无源蜂鸣器 + LEDC PWM） */
 void buzzerInit();
 
-/** 播放一段旋律(非阻塞)。notes 会被拷贝到内部缓冲，函数返回后可释放 */
+/** 播放一段非预设的旋律(非阻塞)。notes 会被拷贝到内部缓冲，函数返回后可释放 */
 void buzzerPlay(const BuzzerNote* notes, uint8_t count, bool loop = false);
 
 /** 播放预定义提示音(非阻塞) */
@@ -48,7 +48,7 @@ void buzzerSound(BuzzerSound sound);
 /** 立即停止播放 */
 void buzzerStop();
 
-/** 是否正在播放 */
+/** 是否正在播放，以免打断当前播放的音效 */
 bool buzzerIsBusy();
 
 /** 状态机更新：放进一个 FreeRTOS 任务里循环调用，内部是 while(1)，不会返回 */
