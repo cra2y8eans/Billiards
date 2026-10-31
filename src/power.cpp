@@ -39,14 +39,24 @@ void powerOn() {
 void powerTask(void* pvParameters) {
   while (1) {
     if (isPowerBTNLongPressed) {
+      isPowerBTNLongPressed = false;
+      ESP_LOGI(TAG, "准备关机");
+
       buzzerSound(SOUND_SHUTDOWN);
-      vTaskDelay(pdMS_TO_TICKS(800));
-      while (1) {
-        isPowerBTNLongPressed = false;
-        servoPowerOff();           // 舵机平滑回 home 并松力
-        digitalWrite(MosPin, LOW); // 断电
-        vTaskDelay(pdMS_TO_TICKS(1000));
+      // 等音乐播完
+      uint32_t t0 = millis();
+      while (buzzerIsBusy() && millis() - t0 < 2000) {
+        vTaskDelay(pdMS_TO_TICKS(20));
       }
+
+      servoPowerOff(); // 舵机收拢并 detach
+      vTaskDelay(pdMS_TO_TICKS(200));
+
+      digitalWrite(MosPin, LOW); // 彻底断电
+
+      // 断电后跑不到这里，保险停住
+      while (1)
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
     vTaskDelay(pdMS_TO_TICKS(100));
   }
