@@ -16,7 +16,7 @@ static const uint8_t servoUpPin            = 8;
 static const uint8_t servoDownPin          = 9;
 static const int     ballDistanceThreshold = 350;
 
-static const int homeAngle  = 58;  // 关机收拢
+static const int homeAngle  = 62;  // 关机收拢
 static const int readyAngle = 105; // 就绪位
 static const int spotAngle  = 180; // 摆球位
 
@@ -83,6 +83,8 @@ void servoPowerOff() {
   servoMoveTo(homeAngle, SERVO_HOMING_DELAY_MS);
   vTaskDelay(pdMS_TO_TICKS(500));
   myServo.detach();
+  pinMode(servoPin, OUTPUT);
+  digitalWrite(servoPin, LOW);
 }
 
 void servoTask(void* pv) {
@@ -96,43 +98,28 @@ void servoTask(void* pv) {
 
     int d = getLaserDistance();
     if (d < 0) {
-      vTaskDelay(pdMS_TO_TICKS(500));
+      vTaskDelay(pdMS_TO_TICKS(100));
       continue;
     }
 
     hasBall = (d < ballDistanceThreshold);
     if (hasBall) {
-      vTaskDelay(pdMS_TO_TICKS(500));
+      vTaskDelay(pdMS_TO_TICKS(100));
       continue;
     }
 
     ESP_LOGI(TAG, "无球，开始摆球");
-    vTaskDelay(pdMS_TO_TICKS(2000));
+    vTaskDelay(pdMS_TO_TICKS(1000));
     servoMoveTo(spotAngle, SERVO_SPOT_DELAY_MS);
     vTaskDelay(pdMS_TO_TICKS(2000));
     servoMoveTo(readyAngle, SERVO_READY_DELAY_MS);
-    vTaskDelay(pdMS_TO_TICKS(2000));
+    vTaskDelay(pdMS_TO_TICKS(1000));
 
     d = getLaserDistance();
-    if (d < 0) continue; // 如果距离传感器失效，则继续等待
+    if (d < 0) continue;
 
     hasBall = (d < ballDistanceThreshold);
     if (!hasBall) {
-      // 连续 3 次无球，则认为没有球，系统暂停，等待装填
-      int noBallCount = 0;
-      for (int i = 0; i < 3; i++) {
-        int d = getLaserDistance();
-        if (d > 0 && d >= ballDistanceThreshold) {
-          noBallCount++;
-        }
-        vTaskDelay(pdMS_TO_TICKS(20)); // 稍等再测
-      }
-
-      if (noBallCount < 3) {
-        // 没有连续 3 次无球，说明有球或数据不稳定，不摆球
-        vTaskDelay(pdMS_TO_TICKS(100));
-        continue;
-      }
       servoMoveTo(readyAngle, SERVO_READY_DELAY_MS);
       buzzerSound(SOUND_ERROR);
       ESP_LOGW(TAG, "料仓空，系统暂停，等待装填");
