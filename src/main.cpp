@@ -15,7 +15,9 @@ void setup() {
   xTaskCreate(buzzerUpdate, "buzzer", 2048, NULL, 3, NULL);
 
   ledInit();
-  powerOn();
+  buzzerSound(SOUND_STARTUP); 
+  // powerOn();
+  vTaskDelay(pdMS_TO_TICKS(2000)); // 等待开机音播放完毕
   laserInit();
   buttonInit();
   servoInit();
