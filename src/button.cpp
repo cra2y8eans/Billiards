@@ -43,7 +43,7 @@ void buttonInit() {
   powerBTN.setup(powerBTNPin, INPUT);
   powerBTN.attachClick(powerBTNShortPress);
   powerBTN.attachLongPressStart(powerBTNLongPress);
-  powerBTN.setPressMs(800);
+  powerBTN.setPressMs(1500);
 }
 
 void buttonTask(void* pvParameters) {

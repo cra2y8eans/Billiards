@@ -82,9 +82,8 @@ void servoPowerOff() {
   if (currentAngle == homeAngle) return;
   servoMoveTo(homeAngle, SERVO_HOMING_DELAY_MS);
   vTaskDelay(pdMS_TO_TICKS(500));
-  myServo.detach();
-  pinMode(servoPin, OUTPUT);
-  digitalWrite(servoPin, LOW);
+  // myServo.detach();
+  pinMode(servoPin, INPUT_PULLDOWN);
 }
 
 void servoTask(void* pv) {

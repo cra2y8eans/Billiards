@@ -41,6 +41,8 @@ void ledInit();
  */
 void ledSetMode(enum LEDMode mode, uint32_t color, uint16_t duration, uint16_t interval);
 
+void ledOff();
+
 /**
  * @brief LED状态机更新函数（非阻塞）
  * @param pvParameter 任务参数（可传NULL）

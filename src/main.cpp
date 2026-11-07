@@ -14,11 +14,11 @@ void setup() {
   buzzerInit();
   xTaskCreate(buzzerUpdate, "buzzer", 2048, NULL, 3, NULL);
 
+  ledInit();
   powerOn();
   laserInit();
-  servoInit();
-  ledInit();
   buttonInit();
+  servoInit();
   batteryInit();
 
 

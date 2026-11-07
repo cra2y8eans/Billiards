@@ -43,6 +43,11 @@ void ledInit() {
   sysRGB.clear();
 }
 
+void ledOff(){
+  sysRGB.clear();
+  sysRGB.show();
+}
+
 /**
  * @brief 设置LED模式（非阻塞）
  */

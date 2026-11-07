@@ -2,11 +2,16 @@
 #include "button.h"
 #include "buzzer.h"
 #include "esp_log.h"
+#include "led.h"
 #include "servo.h"
 #include "stateManager.h"
 #include <Arduino.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+
+#define POWER_ON_DELAY_MS 1500
+#define POWER_OFF_DELAY_MS 2000
+#define BOOT_DELAY_MS 2000
 
 static const char* TAG = "power";
 
@@ -21,7 +26,7 @@ void powerOn() {
   vTaskDelay(pdMS_TO_TICKS(500));
 
   uint32_t pressStart = millis();
-  while (millis() - pressStart < 2000) {
+  while (millis() - pressStart < POWER_ON_DELAY_MS) {
     if (digitalRead(powerBTNPin) == HIGH) {
       Serial.println("按下时长不够，关机");
       digitalWrite(MosPin, LOW);
@@ -33,7 +38,7 @@ void powerOn() {
   // 按满 2 秒 → 响开机音
   Serial.println("开机");
   buzzerSound(SOUND_STARTUP); // 非阻塞
-  vTaskDelay(pdMS_TO_TICKS(2000));
+  vTaskDelay(pdMS_TO_TICKS(BOOT_DELAY_MS));
 }
 
 void powerTask(void* pvParameters) {
@@ -45,13 +50,13 @@ void powerTask(void* pvParameters) {
       buzzerSound(SOUND_SHUTDOWN);
       // 等音乐播完
       uint32_t t0 = millis();
-      while (buzzerIsBusy() && millis() - t0 < 2000) {
+      while (buzzerIsBusy() && millis() - t0 < POWER_OFF_DELAY_MS) {
         vTaskDelay(pdMS_TO_TICKS(20));
       }
 
       servoPowerOff(); // 舵机收拢并 detach
-      vTaskDelay(pdMS_TO_TICKS(200));
-
+      ledOff();
+      vTaskDelay(pdMS_TO_TICKS(POWER_OFF_DELAY_MS));
       digitalWrite(MosPin, LOW); // 彻底断电
 
       // 断电后跑不到这里，保险停住
