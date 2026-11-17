@@ -7,12 +7,8 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
-static const char* TAG = "button";
-
-static const uint8_t servoUpPin   = 8;  // 舵机向上
-static const uint8_t servoDownPin = 9;  // 舵机向下
-static const uint8_t powerBTNPin  = 10; // 电源开关按钮
-static const uint8_t MosPin       = 3;  // 电源MOS管控制引脚
+static const char*   TAG         = "button";
+static const uint8_t powerBTNPin = 3; // 电源开关按钮
 
 volatile bool isPowerBTNShortPressed = false; // 电源按钮短按标志
 volatile bool isPowerBTNLongPressed  = false; // 电源按钮长按标志
@@ -40,7 +36,7 @@ void powerBTNLongPress() {
 }
 
 void buttonInit() {
-  powerBTN.setup(powerBTNPin, INPUT);
+  powerBTN.setup(powerBTNPin, INPUT, true); // true（默认）表示按下时为低电平
   powerBTN.attachClick(powerBTNShortPress);
   powerBTN.attachLongPressStart(powerBTNLongPress);
   powerBTN.setPressMs(1500);
