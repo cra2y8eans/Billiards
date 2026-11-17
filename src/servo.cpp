@@ -11,7 +11,7 @@
 #include <freertos/task.h>
 
 static const char*   TAG                   = "servo";
-static const uint8_t servoPin              = 1;
+static const uint8_t servoPin              = 10;
 static const uint8_t servoUpPin            = 8;
 static const uint8_t servoDownPin          = 9;
 static const int     ballDistanceThreshold = 350;
@@ -92,6 +92,15 @@ void servoTask(void* pv) {
       servoUp();
       servoDown();
       vTaskDelay(pdMS_TO_TICKS(SERVO_TUNE_DELAY_MS));
+      continue;
+    }
+
+    if (laserError) {
+      ESP_LOGE(TAG, "激光测距错误，无法继续摆球");
+      ledSetMode(LED_BLINK, COLOR_RED, 300, 300);
+      buzzerSound(SOUND_ERROR);
+      stateSet(SYSTEM_PAUSED);
+      vTaskDelay(pdMS_TO_TICKS(1000));
       continue;
     }
 

@@ -9,13 +9,14 @@ const char*          TAG                  = "LASER";
 static const uint8_t laser_i2c_scl_pin    = 4;     // SCL引脚
 static const uint8_t laser_i2c_sda_pin    = 5;     // SDA引脚
 volatile bool        laserTimeoutOccurred = false; // 激光测距超时标志
+volatile bool        laserError           = false; // 激光测距错误标志
 
 void laserInit() {
   Wire.begin(laser_i2c_sda_pin, laser_i2c_scl_pin);
   laser.setTimeout(500);
   if (!laser.init()) {
     ESP_LOGE("LASER", "Failed to detect and initialize sensor!");
-    while (1) { }
+    laserError = true;
   }
   // 增加测量时间，获得更好的测量精度
   laser.setMeasurementTimingBudget(200000);

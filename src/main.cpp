@@ -3,7 +3,6 @@
 #include "buzzer.h"
 #include "laser.h"
 #include "led.h"
-#include "power.h"
 #include "servo.h"
 #include "stateManager.h"
 #include <Arduino.h>
@@ -11,25 +10,22 @@
 #include <freertos/task.h>
 
 void setup() {
+  ledInit();
+  xTaskCreate(ledUpdate, "led", 2048, NULL, 2, NULL);
   buzzerInit();
   xTaskCreate(buzzerUpdate, "buzzer", 2048, NULL, 3, NULL);
-
-  ledInit();
-  buzzerSound(SOUND_STARTUP); 
-  // powerOn();
-  vTaskDelay(pdMS_TO_TICKS(2000)); // 等待开机音播放完毕
+  buzzerSound(SOUND_STARTUP);
+  vTaskDelay(pdMS_TO_TICKS(3000)); // 等待开机音播放完毕
   laserInit();
   buttonInit();
   servoInit();
   batteryInit();
 
-
   // 优先级：舵机(3) > 按钮(2) = 电源(2) = LED(2) > 电池(1)
   xTaskCreate(servoTask, "servo", 4096, NULL, 3, NULL);
   xTaskCreate(buttonTask, "btn", 2048, NULL, 2, NULL);
-  xTaskCreate(powerTask, "power", 2048, NULL, 2, NULL);
-  xTaskCreate(ledUpdate, "led", 2048, NULL, 2, NULL);
   xTaskCreate(batteryCheck, "bat", 3072, NULL, 1, NULL);
+  ESP_LOGI("setup", "系统初始化完成，等待按键启动");
 }
 
 void loop() {
