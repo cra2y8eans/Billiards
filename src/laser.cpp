@@ -30,6 +30,6 @@ int16_t getLaserDistance() {
     return -1; // 返回-1表示测量失败
   }
   laserTimeoutOccurred = false;
-  ESP_LOGI("LASER", "距离: %d mm", distance);
+  // ESP_LOGI("LASER", "距离: %d mm", distance);
   return distance; // 返回测量的距离值（单位：毫米）
 }

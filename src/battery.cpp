@@ -13,7 +13,6 @@
 #define BATTERY_READING_INTERVAL (3 * 60 * 1000) // 满电时采样间隔 3 分钟
 #define BATTERY_ALERT_INTERVAL (30 * 1000)       // 低电量报警间隔 30 秒
 
-static const char*   TAG    = "bat";
 static const uint8_t batPin = 0; // 电池电压采样引脚
 static const float   R1     = 100.0 * K_OHM;
 static const float   R2     = 47.0 * K_OHM;

@@ -7,13 +7,10 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
-static const char*   TAG         = "button";
 static const uint8_t powerBTNPin = 3; // 电源开关按钮
 
 volatile bool isPowerBTNShortPressed = false; // 电源按钮短按标志
 volatile bool isPowerBTNLongPressed  = false; // 电源按钮长按标志
-
-static portMUX_TYPE btnMutex = portMUX_INITIALIZER_UNLOCKED;
 
 OneButton powerBTN;
 

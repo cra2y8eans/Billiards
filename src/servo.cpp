@@ -10,7 +10,6 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
-static const char*   TAG                   = "servo";
 static const uint8_t servoPin              = 10;
 static const uint8_t servoUpPin            = 8;
 static const uint8_t servoDownPin          = 9;
@@ -96,7 +95,7 @@ void servoTask(void* pv) {
     }
 
     if (laserError) {
-      ESP_LOGE(TAG, "激光测距错误，无法继续摆球");
+      // ESP_LOGE(TAG, "激光测距错误，无法继续摆球");
       ledSetMode(LED_BLINK, COLOR_RED, 300, 300);
       buzzerSound(SOUND_ERROR);
       stateSet(SYSTEM_PAUSED);
@@ -116,7 +115,7 @@ void servoTask(void* pv) {
       continue;
     }
 
-    ESP_LOGI(TAG, "无球，开始摆球");
+    // ESP_LOGI(TAG, "无球，开始摆球");
     vTaskDelay(pdMS_TO_TICKS(1000));
     servoMoveTo(spotAngle, SERVO_SPOT_DELAY_MS);
     vTaskDelay(pdMS_TO_TICKS(2000));
@@ -130,7 +129,7 @@ void servoTask(void* pv) {
     if (!hasBall) {
       servoMoveTo(readyAngle, SERVO_READY_DELAY_MS);
       buzzerSound(SOUND_ERROR);
-      ESP_LOGW(TAG, "料仓空，系统暂停，等待装填");
+      // ESP_LOGW(TAG, "料仓空，系统暂停，等待装填");
       if (getCurrentState() != SYSTEM_PAUSED) stateSet(SYSTEM_EMPTY);
     }
   }

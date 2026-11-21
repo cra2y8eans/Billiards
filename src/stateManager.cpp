@@ -5,7 +5,6 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
-static const char*  TAG              = "stateManager";
 static portMUX_TYPE systemStateMutex = portMUX_INITIALIZER_UNLOCKED;
 
 systemState_e systemState = SYSTEM_PAUSED; // 系统状态，默认暂停

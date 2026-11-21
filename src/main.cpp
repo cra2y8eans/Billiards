@@ -10,6 +10,7 @@
 #include <freertos/task.h>
 
 void setup() {
+  Serial.begin(115200);
   ledInit();
   xTaskCreate(ledUpdate, "led", 2048, NULL, 2, NULL);
   buzzerInit();
@@ -29,5 +30,7 @@ void setup() {
 }
 
 void loop() {
-  vTaskDelay(pdMS_TO_TICKS(1000));
+  // int16_t d = getLaserDistance();
+  // Serial.printf("距离: %d mm\n", d);
+  vTaskDelay(pdMS_TO_TICKS(500));
 }

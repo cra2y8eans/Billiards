@@ -6,8 +6,6 @@
 #define MIN_BRIGHTNESS 0
 #define STANDARD_BRIGHTNESS 20
 
-static const char* TAG = "LED";
-
 // ===== 硬件配置 =====
 static const uint8_t SYS_WS2812_PIN = 6;
 
